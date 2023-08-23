@@ -1,7 +1,6 @@
 # Storage systems
 - 构建(fault tolerance)可容错的系统，需要可靠的storage存储实现。
 - 通常应用开发保持无状态stateless，而底层存储负责永久保存数据。（应用只有软状态没有硬状态）
-
 # Why Hard
 - 高性能(high perference)
    - shard：需要分片（并发读取）
@@ -19,7 +18,7 @@
    - >对于故障一般使用复制解决。而不成熟的复制操作，会导致读者在不做修改的情况下读取到两次不同的数据。Bad replication plan: 当C1、C2并发向两个备份S1和S2分别写入数据1和2，在写操作都完成后，C3、C4从S1或S2读数的结果可能不同
    - >（因为没有明确的协议指出这里W1和W2的数据在S1、S2上以什么方式存储，可能1被2覆盖，反之亦然）
 
-# 假设：
+# 假设
 - 系统建立在便宜且经常出错的组件上；
 - 系统需要存储数量不多的大型文件；
 - 主要分为两种读操作：大型流式读取（streaming read）（连续的）和小型随机读取；
@@ -27,20 +26,19 @@
 - 系统必须实现定义良好的语义，让多方用户并发地添加数据到同一个文件；
 - 高稳定的带宽比低时延更重要。
 # GFS
-GFS的几个主要特征：
-
+GFS的几个主要特征:
 - Big：large data set，巨大的数据集
 - Fast：automatic sharding，自动分片到多个磁盘
 - Gloal：all apps see same files，所有应用程序从GFS读取数据时看到相同的文件（一致性）
 - Fault tolerance：automic，尽可能自动地采取一些容错恢复操作
 
-# interface接口：
+# interface接口
  - 文件按层次目录组织，用路径名标识；
  - create, delete, open, close, read, write... 与通常的文件系统接口类似；
  - **snapshot** creates a copy of a file or a directory tree at low cost. 
  - **record append** allows multiple clients to append data to the same file concurrently  - while guaranteeing the atomicity of each individual client’s append.(原子的，不需要额外的锁)
 
-# 架构：
+# 架构
 - **Non-standard** 
    - 只有一个master而不是复制的，存在单点故障的问题
    - 有不一致性，in-consistencies
@@ -49,17 +47,31 @@ single master + multiple chunkservers + multiple clients（可与multiple chunks
 
 ## master
 - **metadata:** 
-   - file and chunk namespaces (persistent)
-   - mapping from files to chunks(array of chunk handles) (persistent)
-   - locations of each chunk's replicas (not persistent）
-      - 因为chunkserver可能出问题。keep it up-to-date，控制chunk placement和检测server状态
+   - file and chunk namespaces (**persistent**)
+   - mapping from files to chunks(array of chunk handles) (**persistent**)
+      - chunk handle=>版本号（version#）& list of chunk servers & **主服务器primary和次要服务器secondaries**，以及主服务器有释放时间lease time
+   - locations of each chunk's replicas (**not persistent**）
+      - 一般为3个。
+      - not persistent，在启动时请求chunkservers的chunk信息，之后周期性地请求。
    - access control information
+   - 这些信息大多存储在内存中，所以master可以快速响应client
+   
+- **operation log + checkpoint**
+   - contains a historical record of critical metadata changes，所有变更操作（mutations）都会写入这个日志，并放在稳定的存储里（replicate it on multiple remote machines，both locally and remotely） ，然后才响应client。
+   - 当master故障，可以通过重放（replay）日志重建内部状态；
+   - 定期创建自己状态的检查点。当log超过一定大小就记录其checkpoint（最小化启动时长），以便从最新的checkpoint **recover**（compact B-tree)
+   - master切换到新的log文件，在另一个线程创建checkpoint，所以不需要delay incoming mutations
+   
+------
+
+> - **哪些状态要存放在稳定的存储（放在log）中？**
+> - file name =>array of chunk handles? **需要**。否则master崩溃后会丢失文件。
+> - chunk handle =>list of chunk servers?**不需要**。master重启时会要求其他存储chunk数据的服务器说明自己维护的chunk handles数据。这里master只需要内存中维护即可。同样的，主服务器(primary)、次要服务器(secondaries)、主服务器(primary)的租赁时间(lease time)也都只需要在内存中即可。
+> chunk handle =>version number?**需要**。否则master崩溃重启时，master无法区分哪些chunk server存储的chunk最新的。比如可能有服务器存储的chunk version是14，由于网络问题，该服务器还没有拿到最新version 15的数据，master必须能够区分哪些server有最新version的chunk。为什么不能在重启后找最大的版本号？因为有最新版本号的server可能正好也故障了。
+
 - **system-wide activities **:chunk lease management/ garbage collection of orphaned chunks/ chunk migration between chunkservers. 
    - 告诉client它应该与哪些chunkservers通信。
 - **Heartbeat** message with chunkservers
-- **operation log**
-   - contains a historical record of critical metadata changes
-   - 当log超过一定大小就记录其checkpoint，以便从最新的checkpoint **recover**（compact B-tree)
 
 ## client
 - 实现文件系统API
@@ -70,7 +82,7 @@ single master + multiple chunkservers + multiple clients（可与multiple chunks
 - chunkservers因为chunks存储在本地文件（？）。
 
 ## 流程（read）：
-- client将应用指定的file name和byte offset转化为文件中的chunk index；
+- client将应用指定的file name + byte offset转化为文件中的chunk index；
 - 向master发送包含file name 和chunk index的请求；（可能请求多个chunk）
 - master返回对应的chunk handle和locations of the replicas；
 - client将file name和chunk index作为key缓存这个信息；
