@@ -1,0 +1,27 @@
+# 框架
+
+Java 集合， 也叫作容器，主要是由两大接口派生而来：一个是 `Collection`接口，主要用于存放单一元素；另一个是 `Map` 接口，主要用于存放键值对。对于`Collection` 接口，下面又有三个主要的子接口：`List`、`Set` 和 `Queue`。
+
+1. Collection： Collection 是集合 List、 Set、 Queue 的最基本的接口。
+
+2. Iterator：迭代器，可以通过迭代器遍历集合中的数据
+
+3. Map：是映射表的基础接口
+
+![image-20231017144018364](https://propane.oss-cn-nanjing.aliyuncs.com/typora_pic/1017%20java%E9%9B%86%E5%90%88%E6%8E%A5%E5%8F%A3.png)
+
+![Java 集合框架概览](https://propane.oss-cn-nanjing.aliyuncs.com/typora_pic/1017%20java-collection-hierarchy.png)
+
+![image-20231017143705169](https://propane.oss-cn-nanjing.aliyuncs.com/typora_pic/1017-java%E9%9B%86%E5%90%88%E6%A1%86%E6%9E%B6.png)
+
+### 为什么要使用集合？
+
+当我们需要存储一组类型相同的数据时，数组是最常用且最基本的容器之一。但是，使用数组存储对象存在一些不足之处，因为在实际开发中，存储的数据类型多种多样且数量不确定。这时，Java 集合就派上用场了。与数组相比，Java 集合提供了更灵活、更有效的方法来存储多个数据对象。Java 集合框架中的各种集合类和接口可以存储不同类型和数量的对象，同时还具有多样化的操作方式。相较于数组，Java 集合的优势在于它们的大小可变、支持泛型、具有内建算法等。总的来说，Java 集合提高了数据的存储和处理灵活性，可以更好地适应现代软件开发中多样化的数据需求，并支持高质量的代码编写。
+
+### [#](#如何选用集合) 如何选用集合?
+
+我们主要根据集合的特点来选择合适的集合。比如：
+
+- 我们需要根据键值获取到元素值时就选用 `Map` 接口下的集合，需要排序时选择 `TreeMap`,不需要排序时就选择 `HashMap`,需要保证线程安全就选用 `ConcurrentHashMap`。
+- 我们只需要存放元素值时，就选择实现`Collection` 接口的集合，需要保证元素唯一时选择实现 `Set` 接口的集合比如 `TreeSet` 或 `HashSet`，不需要就选择实现 `List` 接口的比如 `ArrayList` 或 `LinkedList`，然后再根据实现这些接口的集合的特点来选用。
+
