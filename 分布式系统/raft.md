@@ -139,7 +139,8 @@ RSM(复制状态机replicated state machine) 。这里raft就像一个library应
 > 问题：如果log从leader同步到其他follower时，leader宕机了，会怎么样？
 >
 > 回答：会重新发生选举，而拥有最新操作log的机器成为新leader后会将追加的log条目传递给其他follower，这样就保证这些机器都拥有最新的log了。
->
+
+![image-20231110105147628](https://propane.oss-cn-nanjing.aliyuncs.com/typora_pic/1110%20raft%20RPCs.png)
 
 ## Log
 
@@ -502,6 +503,10 @@ A time sequence showing why a leader cannot determine commitment using log entri
 > **线性一致性**(Linearizability)，或称**原子一致性**或**严格一致性，**指的是程序在执行的历史中在存在可线性化点P的执行模型，这意味着一个操作将在程序的调用和返回之间的某个点P起作用。这里“起作用”的意思是被系统中并发运行的所有其他线程所感知。
 >
 > [线性一致性：什么是线性一致性？ - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/42239873)
+
+> https://anishathalye.com/testing-distributed-systems-for-linearizability/
+>
+> In a linearizable system,**every operation appears to execute atomically and instantaneously at some point between the invocation and response**. Linearizability is a strong consistency model, so it’s relatively easy to build other systems on top of linearizable systems.
 
 在论文中对整个系统提供的服务的正确性(correctness)称为**线性一致性(Linearizability)**，线性一致性需要保证满足一下三个条件：Like a single machine
 

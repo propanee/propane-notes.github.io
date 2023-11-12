@@ -2,7 +2,12 @@
 
 [一文读懂 Go Http Server 原理](https://blog.csdn.net/RA681t58CJxsgCkJ31/article/details/128660811)
 
+[Golang HTTP 标准库实现原理](https://mp.weixin.qq.com/s?__biz=MzkxMjQzMjA0OQ==&mid=2247484040&idx=1&sn=b710f4429188ea5f49f6a9155381b67f)
+
 ## http request method ![img](https://propane.oss-cn-nanjing.aliyuncs.com/typora_pic/0929http%20request.png)
+
+
+
 ## http.HandleFunc
 
 ```go

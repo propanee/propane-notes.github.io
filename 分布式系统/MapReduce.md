@@ -27,7 +27,22 @@ The Reduce function, also written by the user, accepts an intermediate key I and
 
 <img src="https://propane.oss-cn-nanjing.aliyuncs.com/typora_pic/map%20reduce%20example%20.png" alt="image.png" style="zoom:67%;" />
 
-<img src="https://propane.oss-cn-nanjing.aliyuncs.com/typora_pic/map%20reduce%20example2.png" alt="image.png" style="zoom:50%;" />
+```c++
+map(String key, String value):
+	// key: document name
+	// value: document contents
+	for each word w in value:
+		EmitIntermediate(w, "1");
+reduce(String key, Iterator values):
+	// key: a word
+	// values: a list of counts
+	int result = 0;
+	for each v in values:
+		result += ParseInt(v);
+	Emit(AsString(result));
+```
+
+
 
 ## 系统架构
 
@@ -42,11 +57,11 @@ The Reduce function, also written by the user, accepts an intermediate key I and
 
 **shortcoming** : **map** must be completely independent and functional pure;
 
-瓶颈：网络吞吐量（为了避免使用网络，在同一组机器上运行GFS servers 和 map workers，master调度时让本地的input data作为同一台机器map的输入文件，map的输出也在本地磁盘上，如果失败了，就近取replica（如同一网络中）。但是将输出分发到reduce worker上依然需要网络）
+瓶颈：网络吞吐量（为了避免使用网络，在同一组机器上运行GFS servers 和 map workers，master调度时让本地的input data作为同一台机器map的输入文件，map的输出也在本地磁盘上，如果失败了，就近取replica（如同一网络中）。
 
 ![image.png](https://propane.oss-cn-nanjing.aliyuncs.com/typora_pic/map%20reduce%20arch.png)
 
-1. 将input files分成M个16-64MB的切片，并在集群中启动一些程序的副本；
+1. 用户程序中MapReduce库将input files分成M个16-64MB的切片，并在集群中启动程序的多个副本；
 2. master+workers，master向workers分发M个Map和R个Reduce任务;
 3. map worker通过map函数将输入数据转化成中间级k-v对，并缓存在内存里；
 4. 中间级k-v对由内存写入磁盘，并通过partitioning function (e.g., hash(key) mod R)  划分为R个区域；将其在磁盘中的位置发给master，master发给reduce;
