@@ -1,4 +1,6 @@
-- 返回中声明变量
+### 返回中声明变量
+
+可以直接在返回类型中声明变量，这样函数中就不用短声明:=，并且可以直接return
 
 ```go
 // 可以直接在返回类型中声明变量，这样函数中就不用短声明:=
@@ -10,7 +12,7 @@ func getOne(id int) (u userDB, err error) {
 }
 ```
 
-- 变量遮蔽
+### 变量遮蔽
 
 ```go
 var db *sql.DB
@@ -23,11 +25,29 @@ func main() {
 }
 ```
 
-- if时短声明变量
+### if时短声明变量
 
 ```go
 if err := tx.Rollback(); err != nil {        
  log.Fatalf("unable to back: %v", err)
 ```
 
-- 
+### 函数内定义函数
+
+```go
+func inorderTraversal(root *TreeNode) []int {
+    var traversal func(node *TreeNode)
+	var res []int
+	traversal = func(node *TreeNode) {
+		if node == nil {
+			return
+		}
+		traversal(node.Left)
+        res = append(res, node.Val)
+		traversal(node.Right)
+	}
+    traversal(root)
+	return res
+}
+```
+

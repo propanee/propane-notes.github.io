@@ -167,7 +167,7 @@ lease: maintain a consistent mutation order across replicas. 最小化master的�
 
 这里一致性问题，可以简单地归结于，当你完成一个append操作后，进行read操作会读取到什么数据？
 
- 这里假设一个场景，我们讨论一下可能产生的一致性问题，这里有一个M（maseter），P（primary），S（Secondary）：
+这里假设一个场景，我们讨论一下可能产生的一致性问题，这里有一个M（maseter），P（primary），S（Secondary）：
 
 - **某时刻起，M得不到和P之间的ping-pong通信的响应，什么时候Master会指向一个新的P？**
 

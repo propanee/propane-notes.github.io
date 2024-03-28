@@ -1,3 +1,63 @@
+# 编码
+
+**补充ASCII、UNICODE、LATIN-1、UTF-8-16-32**
+
+***ASCII***
+
+- 单字节，在 0 ~ 127 范围是基础码，在128 ~255 是扩展码；
+
+- 在0 ~ 127范围内是全球标准，所有单字节编码（latin-1）,或长度可变编码（utf-8）都兼容。而 -1 ~ -128 范围则不兼容，每种编码规范所定义的标准都不同；
+
+***Latin-1***
+
+1. latin-1 就是 iso-8895-1;
+
+2. latin-1 是单字节编码； 
+3. 在 0 ~ 127 范围与 ascii 的一致；在128 ~ 255 则不同； 
+4. 因为latin-1(ISO-8859-1)编码范围使用了单字节内的所有空间，在支持ISO-8859-1的系统中传输和存储其他任何编码的字节流都不会被抛弃。
+5. 虽然Unicode中的前256个字符及编码值与Latin-1完全一致，但UTF-8只对前128个即ASCII字符采用单字节编码，其余128个Latin-1字符是采用2个字节编码。因此ASCII编码的文件可以直接以UTF-8方式读取，而Latin-1的文件若包含值为128-255的字符则不可以。
+
+***UNICODE***
+
+- 一种规范，只是为全球定义了每一个字符的唯一的二进制编号，但并未指定值以何种形式存储。
+- UNICODE规范的常见实现方式：UTF-8、UTF-16、UTF-32。
+
+***UTF-8***
+
+不同范围内UNICODE的字符，UTF-8所存储的字节数都不同，用1到4个字节编码，是可变长度的编码方式。第一个字节leading byte+后续字节continuation byte。
+
+- 0xxxxxxx：单字节编码; 0000 ~ 007F; 1 Byte;
+- 110xxxxx 10xxxxxx：双字节编码; 0080 ~ 07FF; 2 Byte;
+- 1110xxxx 10xxxxxx 10xxxxxx：三字节编码;  0800 ~ FFFF; 3 Byte;
+- 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx：四字节编码; 10000 ~ 1FFFFF; 4 Byte;
+- 如 "田" 01110101,00110000 U+7530：1110*0111*, 10*010100*, 10*110000*
+
+***UTF-16***
+
+![img](https://propane.oss-cn-nanjing.aliyuncs.com/typora_pic/1022%20UTF16.webp)
+
+编码长度既是可变，亦是固定：采用存储的字节长度为2Byte 或 4Byte(lead/trail surrogate pair)。
+
+D800–DBFF和DC00–DFFF为保留区间，若落在D800–DBFF则作为lead surrogate，DC00–DFFF为trail surrogate；
+
+UTF-16编码分为 UTF-16 little endian（LE，小端，将低序字节存储在起始地址） 和 UTF-16 big endian （BE，大端，将高序字节存储在起始地址）
+
+- 如"中" 4E2D: LE为 0~15 *4E* 15~31 *2D*; BE为 0~15 *2D* 15~31 *4E*；
+- windows 采用是 utf-16 le ,而 mac 采用是 utf-16 be；
+
+UTF-16与UTF-8都是self-synchronizing的，即某个16bit是否是一个字符的开始无需检查其前一个或者后一个16bit。与UTF-8的不同之处是，UTF-16不支持从某个随机的字节开始读取。如0041, D801DC01，若第一个字节丢失即从第二个字节读取，则UTF-16认为是41D8,01DC,01，而UTF-8不存在这个问题。
+
+***UTF-32***
+
+每个字符都采用 4byte 字节来存储，浪费存储空间。
+
+***BOM(byte-order mark)***
+
+- 标识字节顺序，即大端小端，该符号位于文本序列起始字节之前；
+- UTF-8中的BOM是 **0xEF,0xBB,0xBF**，但UTF8编码单位是字节，字节的先后顺序在编码、传输和解码过程中均不改变，因此BOM在UTF8中的唯一作用是标识序列使用的是UTF8编码，在由其它使用BOM的编码转换为UTF8编码的情况下，建议在UTF8序列中保留BOM以便转换回原编码的时候不丢失BOM信息；
+- UTF-16中为**U+FEFF**（BE）和**U+FFFE**（LE），可以使用编码方式UTF-16BE和UTF-16LE来显式地标明字节顺序，当使用了UTF-16BE和UTF-16LE时，BOM不应该再出现在字节序列中，很多应用直接忽略该字符若其仍然存在；
+- UTF-16中为0000FEFF和FFFE0000。
+
 # String
 
 ## String不可变性
@@ -39,64 +99,6 @@ public final class String implements java.io.Serializable, Comparable<String>, C
 > **Java 9 将 `String` 的底层实现由 `char[]` 改成了 `byte[]` **
 >
 > 新版的 String 其实支持两个编码方案：Latin-1 和 UTF-16。如果字符串中包含的汉字没有超过 Latin-1 可表示范围内的字符，那就会使用 Latin-1 作为编码方案。Latin-1 编码方案下，`byte` 占一个字节(8 位)，`char` 占用 2 个字节（16），`byte` 相较 `char` 节省一半的内存空间。JDK 官方表示绝大部分字符串对象只包含 Latin-1 可表示的字符。如果字符串中包含的汉字超过 Latin-1 可表示范围内的字符，`byte` 和 `char` 所占用的空间是一样的。
-
-> **补充ASCII、UNICODE、LATIN-1、UTF-8-16-32**
->
-> ***ASCII***
->
-> - 单字节，在 0 ~ 127 范围是基础码，在128 ~255 是扩展码；
->
-> - 在0 ~ 127范围内是全球标准，所有单字节编码（latin-1）,或长度可变编码（utf-8）都兼容。而 -1 ~ -128 范围则不兼容，每种编码规范所定义的标准都不同；
->
-> ***Latin-1***
->
-> 1. latin-1 就是 iso-8895-1;
->
-> 2. latin-1 是单字节编码； 
-> 3. 在 0 ~ 127 范围与 ascii 的一致；在128 ~ 255 则不同； 
-> 4. 因为latin-1(ISO-8859-1)编码范围使用了单字节内的所有空间，在支持ISO-8859-1的系统中传输和存储其他任何编码的字节流都不会被抛弃。
-> 5. 虽然Unicode中的前256个字符及编码值与Latin-1完全一致，但UTF-8只对前128个即ASCII字符采用单字节编码，其余128个Latin-1字符是采用2个字节编码。因此ASCII编码的文件可以直接以UTF-8方式读取，而Latin-1的文件若包含值为128-255的字符则不可以。
->
-> ***UNICODE***
->
-> - 一种规范，只是为全球定义了每一个字符的唯一的二进制编号，但并未指定值以何种形式存储。
-> - UNICODE规范的常见实现方式：UTF-8、UTF-16、UTF-32。
->
-> ***UTF-8***
->
-> 不同范围内UNICODE的字符，UTF-8所存储的字节数都不同，用1到4个字节编码，是可变长度的编码方式。第一个字节leading byte+后续字节continuation byte。
->
-> - 0xxxxxxx：单字节编码; 0000 ~ 007F; 1 Byte;
-> - 110xxxxx 10xxxxxx：双字节编码; 0080 ~ 07FF; 2 Byte;
-> - 1110xxxx 10xxxxxx 10xxxxxx：三字节编码;  0800 ~ FFFF; 3 Byte;
-> - 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx：四字节编码; 10000 ~ 1FFFFF; 4 Byte;
-> - 如 "田" 01110101,00110000 U+7530：1110*0111*, 10*010100*, 10*110000*
->
-> ***UTF-16***
->
-> ![img](https://propane.oss-cn-nanjing.aliyuncs.com/typora_pic/1022%20UTF16.webp)
->
-> 编码长度既是可变，亦是固定：采用存储的字节长度为2Byte 或 4Byte(lead/trail surrogate pair)。
->
-> D800–DBFF和DC00–DFFF为保留区间，若落在D800–DBFF则作为lead surrogate，DC00–DFFF为trail surrogate；
->
-> UTF-16编码分为 UTF-16 little endian（LE，小端，将低序字节存储在起始地址） 和 UTF-16 big endian （BE，大端，将高序字节存储在起始地址）
->
-> - 如"中" 4E2D: LE为 0~15 *4E* 15~31 *2D*; BE为 0~15 *2D* 15~31 *4E*；
-> - windows 采用是 utf-16 le ,而 mac 采用是 utf-16 be；
->
-> UTF-16与UTF-8都是self-synchronizing的，即某个16bit是否是一个字符的开始无需检查其前一个或者后一个16bit。与UTF-8的不同之处是，UTF-16不支持从某个随机的字节开始读取。如0041, D801DC01，若第一个字节丢失即从第二个字节读取，则UTF-16认为是41D8,01DC,01，而UTF-8不存在这个问题。
->
-> ***UTF-32***
->
-> 每个字符都采用 4byte 字节来存储，浪费存储空间。
->
-> ***BOM(byte-order mark)***
->
-> - 标识字节顺序，即大端小端，该符号位于文本序列起始字节之前；
-> - UTF-8中的BOM是 **0xEF,0xBB,0xBF**，但UTF8编码单位是字节，字节的先后顺序在编码、传输和解码过程中均不改变，因此BOM在UTF8中的唯一作用是标识序列使用的是UTF8编码，在由其它使用BOM的编码转换为UTF8编码的情况下，建议在UTF8序列中保留BOM以便转换回原编码的时候不丢失BOM信息；
-> - UTF-16中为**U+FEFF**（BE）和**U+FFFE**（LE），可以使用编码方式UTF-16BE和UTF-16LE来显式地标明字节顺序，当使用了UTF-16BE和UTF-16LE时，BOM不应该再出现在字节序列中，很多应用直接忽略该字符若其仍然存在；
-> - UTF-16中为0000FEFF和FFFE0000。
 
 ## String、StringBuffer、StringBuilder 的区别
 
