@@ -362,7 +362,7 @@ k/v server也有一个数据库，表里有所有的信息，为什么要记录�
 
 - S2向S3发送heartbeat，此heartbeat没有log entry（因为nextIndex指向空log[]），但是携带 preterm = 5，preindex = 12；
 - S3检查自己的log发现log index12为term4，回复S2rejection no，表明自己还存活，但是不能同意S2要求的append操作，因为S3自己发现自己的log落后了；
-- S2得知S3落后于自己，将自己的nextIndex从13减到12；
+- S2得知S3落后于自己，将nextIndex从13减到12；
 - S2重新发送请求到S3，携带log entry  [5]， preterm = 3，preIndex = 11；
 - S3检查自己log index11的位置为3，发现和S2说的一样，于是按照S2的log记录，在自己log index12的位置将term4改成term5，然后回复S2一条确定消息ok；
 - S2收到来自S3的ok后，将自己维护的对应S3的matchIndex更新为13，表示S2和S3在log index13之前的log entry都是对齐的。
